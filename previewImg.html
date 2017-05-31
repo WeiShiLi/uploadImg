@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="btn_up">上传头像</div>
+<input type="file" id="upload" style="display: none">
+
+<img src="" height="100" width="100" class="default_face"/>
+
+<script>
+
+    let defaultImg=parent.document.querySelector(".default_face");
+
+    let btn_up=document.querySelector(".btn_up");
+    let upload=document.querySelector("#upload");
+    btn_up.onclick=()=>{ //upload img click
+        upload.addEventListener("change",function () {
+
+            let  file=upload.files[0];
+            let imgtype=/^image\//;
+            if(!imgtype.test(file.type)){
+                alert("请选择图片类型上传")
+                return;
+            }
+            if(file){
+                var render=new FileReader();
+                render.readAsDataURL(file);
+                render.onload=(e)=>{
+                    defaultImg.src=e.target.result;
+                }
+            }
+
+        })
+        upload.click();
+    }
+</script>
+
+</body>
+</html>

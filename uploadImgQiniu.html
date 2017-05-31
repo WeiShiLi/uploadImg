@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <script src="http://cdn.static.runoob.com/libs/angular.js/1.4.6/angular.min.js"></script>
+
+
+    <script src="http://cdn.static.runoob.com/libs/jquery/1.10.2/jquery.min.js"></script>
+
+</head>
+<body>
+
+<input type="text" id="url" style="display: none">
+
+
+<button id="btn" style="width: 100px;height: 50px" >上传图片</button>
+
+    <img src="" id="loc_img" style="width: 200px;height: 200px" />
+
+
+    <script>
+        var _cfg = {}; //全局设置参数的变量
+
+        //七牛文件上传接口设定
+        _cfg.qn = {
+            uptoken:"um6IEH7mtwnwkGpjImD08JdxlvViuELhI4mFfoeL:zPVaMyRvtEgsfbKKuIPpMobH6nc=:eyJzY29wZSI6ImphdmFkZW1vIiwiZGVhZGxpbmUiOjIzNjY1NjI3MjZ9Cg==",
+            domain:'http://7xl4c6.com1.z0.glb.clouddn.com/',
+//            getUploadTokenApiRd: 'http://www.jieminuoketang.com/api/qn_getUploadToken2', //上传到随机文件名
+//            BucketDomain: 'http://files.jieminuoketang.com/',
+        };
+        var _pielib = {};
+        /*创建唯一的id
+         */
+        _pielib.uuid = function uniqueId(prefix) {
+            var ts = Number(new Date()).toString(36)
+            var rd = Number(String(Math.random()).replace('.', '')).toString(36);
+            var res = ts + '-' + rd;
+            if
+            (prefix) res = prefix + '-' + res;
+            return res;
+        };
+
+        _pielib.uploadFileQnRd = function (token,file,success, error, complete){
+            var useargs = (token.constructor != String);
+
+            if (useargs) token = arguments.token;
+            if (!token) {
+                __errhdlr(new Error('_pielib.uploadFileQnRd:token undefined.'))
+                return;
+            };
+
+            if (useargs) file = arguments.file;
+            if (!file) {
+                __errhdlr(new Error('_pielib.uploadFileQnRd:file undefined.'))
+                return;
+            };
+
+//            var domain = _cfg.qn.BucketDomain;///////////////////////////////////////////////
+
+            var domain = _cfg.qn.domain;
+            //准备fromdata
+            var formdata = new FormData();
+            formdata.append('token', token);
+            formdata.append('file', file);
+            //发起上传
+            var set = {
+                url: "http://up.qiniu.com",
+                data: formdata,
+                type: 'POST',
+                processData: false, //屏蔽掉ajax自动header处理
+                contentType: false, //屏蔽掉ajax自动header处理
+            };
+            //添加各种监听函数
+            if (useargs) success = arguments.success;
+            if (success) set.success = success;
+            if (useargs) error = arguments.error;
+            if (error) set.error = error;
+            if (useargs) complete = arguments.complete;
+            if (complete) set.complete = complete;
+
+            var xhr = $.ajax(set);
+            xhr.file = file;
+            xhr.domain = domain;
+
+            return xhr;
+
+        }
+        $('#btn').click(function () {
+
+          /*  $('#url').attr('value','url111');
+
+            $('#url').show();*/
+
+            alert(1)
+            var btnjo=$('#btn');
+
+            //创建input
+            var filejo = btnjo.siblings('#uploadFileInput');
+            filejo.remove();
+            filejo = $('<input accept="image/jpeg,image/jpg,image/png" id="uploadFileInput" type="file" style="display: none">').appendTo(btnjo);
+//                if (multi) filejo.attr('multiple', "multiple");
+            btnjo.after(filejo);
+//绑定监听事件
+            filejo.bind('change', function () {
+                var fileobjs = filejo.get(0).files;
+
+                //通过fileobjs[0]，，，，this.files[0]获取到的是相同结果
+
+//                var domain = _cfg.qn.BucketDomain;////////////////////////////////////////
+                var domain = _cfg.qn.domain;
+//                alert(fileobjs)
+//                alert(fileobjs[0])
+//                alert(fileobjs.length);
+//获取随机文件名token
+//                $.get(_cfg.qn.getUploadTokenApiRd, function (res) {///////////////////////////////////////
+
+                    var f = fileobjs[0];
+//                    console.log(JSON.stringify(f));
+
+                    //执行上传之前的动作,预先放置一个空的xhr，带有file信息
+                    var  xhrid = _pielib.uuid();
+                    var xhr = {};
+                    xhr.file =f;
+                  console.log(xhr.file );
+                    xhr.id = xhr.file.id = f.id = xhrid;
+
+                    console.log("获取到的xhr：："+JSON.stringify(xhr));
+                    console.log("f:"+JSON.stringify(f));
+                    console.log("xhr.file:"+xhr.file);
+
+                    //开始上传
+                    xhr = _pielib.uploadFileQnRd(
+//                        res.data.uptoken,
+                        _cfg.qn.uptoken,
+                        f,
+                        function (res) {
+                            //把七牛的返回结果转为标准格式
+                            res['success'] = true;
+                            f.url = res.url = res['file_path'] = domain + res.key;
+                            res['msg'] = 'upload ok.';
+//                            if (successfn) successfn(f, res);
+
+                            $('#url').attr('value',f.url);
+
+                            $('#loc_img').attr('src',f.url)
+
+                            $('#url').show();
+                            alert("图片上传成功");
+
+                        },
+                        function (f, err) {
+//                            if (errorfn) errorfn(f, err);
+                            alert(f+"error")
+                        },
+                        function (xhr, status) {
+                            filejo.remove();
+//                            if (completefn) completefn(f, xhr, status);
+                        },
+                        domain
+                    );
+
+                console.log(JSON.stringify(xhr)+"99999");
+
+
+//                })
+
+                var file = this.files[0];
+                alert("文件大小:"+(file.size / 1024).toFixed(1)+"kB");
+//                alert(file);
+                if (window.FileReader) {
+                    var reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    //监听文件读取结束后事件
+                    reader.onloadend = function (e) {
+//                        alert(e.target.result)
+//                        alert(file.fileName)
+//                        document.getElementById("loc_img").src=e.target.result
+//                        showXY(e.target.result,file.fileName);
+                    };
+                }
+
+
+
+
+
+            });
+          /*  function showXY(source){
+                alert(source+"///1234567")
+                var img = document.getElementById("loc_img");
+                img.src = source;
+                alert("Width:"+img.width+", Height:"+img.height);
+            }*/
+            filejo.click();
+        })
+    </script>
+</body>
+</html>
